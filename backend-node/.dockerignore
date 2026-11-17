@@ -3,6 +3,8 @@ dist
 .env*
 !*.env.example
 *.log
+src/tests
+*.test.ts
 .DS_Store
 Thumbs.db
 
