@@ -27,6 +27,9 @@ import { openApiSpec } from './docs/openapi';
 export function createApp(): Application {
   const app = express();
 
+  // Trust Render / Vercel reverse proxy
+  app.set('trust proxy', 1);
+
   // 1. Global Security, CORS & Logging Middlewares
   app.use(securityMiddleware);
   app.use(corsMiddleware);
