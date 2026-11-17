@@ -1,0 +1,54 @@
+model Supplier {
+  id                 Int           @id @default(autoincrement())
+  name               String        @db.VarChar(180)
+  email              String?       @unique @db.VarChar(255)
+  phone              String?       @db.VarChar(40)
+  address            String?       @db.VarChar(255)
+  city               String?       @db.VarChar(100)
+  country            String?       @db.VarChar(100)
+  taxId              String?       @db.VarChar(64)
+  outstandingBalance Decimal       @default(0) @db.Decimal(12, 2)
+  status             PartnerStatus @default(ACTIVE)
+  deletedAt          DateTime?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  products       SupplierProduct[]
+  purchaseOrders PurchaseOrder[]
+
+  @@index([status])
+  @@map("suppliers")
+}
+
+model SupplierProduct {
+  supplierId  Int
+  productId   Int
+  supplierSku String?  @db.VarChar(64)
+  createdAt   DateTime @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([supplierId, productId])
+  @@map("supplier_products")
+}
+
+model Customer {
+  id               Int           @id @default(autoincrement())
+  name             String        @db.VarChar(180)
+  email            String?       @unique @db.VarChar(255)
+  phone            String?       @db.VarChar(40)
+  billingAddress   String?       @db.VarChar(255)
+  shippingAddress  String?       @db.VarChar(255)
+  city             String?       @db.VarChar(100)
+  country          String?       @db.VarChar(100)
+  status           PartnerStatus @default(ACTIVE)
+  deletedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  salesOrders SalesOrder[]
+
+  @@index([status])
+  @@map("customers")
+}

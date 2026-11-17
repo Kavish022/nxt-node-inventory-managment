@@ -1,0 +1,48 @@
+enum ActivityType {
+  STOCK_IN
+  STOCK_OUT
+  TRANSFER
+  DAMAGED
+  EXPIRED
+  LOST_STOLEN
+  ADJUSTMENT
+  LOW_STOCK_ALERT
+}
+enum ActivitySeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+model Vendor {
+  id          Int                 @id @default(autoincrement())
+  code        String              @unique @db.VarChar(32)
+  name        String              @db.VarChar(160)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  activities  InventoryActivity[]
+  @@map("vendors")
+}
+model InventoryActivity {
+  id            Int              @id @default(autoincrement())
+  vendorId      Int
+  userId        Int?
+  warehouseId   Int?
+  productId     Int?
+  type          ActivityType
+  severity      ActivitySeverity @default(INFO)
+  title         String           @db.VarChar(180)
+  description   String?          @db.VarChar(500)
+  // Denormalized snapshot data to eliminate expensive SQL JOINs
+  productSku    String?          @db.VarChar(64)
+  productName   String?          @db.VarChar(180)
+  warehouseName String?          @db.VarChar(160)
+  userName      String?          @db.VarChar(120)
+  quantityDelta Decimal?         @db.Decimal(14, 4)
+  metadata      Json?
+  createdAt     DateTime         @default(now())
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  // Compound index for fast O(log N) live stream queries
+  @@index([vendorId, createdAt])
+  @@index([vendorId, severity, createdAt])
+  @@map("inventory_activities")
+}

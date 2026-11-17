@@ -1,0 +1,36 @@
+export const Permissions = {
+  USERS_READ: 'users:read',
+  USERS_WRITE: 'users:write',
+  ROLES_READ: 'roles:read',
+  ROLES_WRITE: 'roles:write',
+  PRODUCTS_READ: 'products:read',
+  PRODUCTS_WRITE: 'products:write',
+  PRODUCTS_DELETE: 'products:delete',
+  CATEGORIES_READ: 'categories:read',
+  CATEGORIES_WRITE: 'categories:write',
+  INVENTORY_READ: 'inventory:read',
+  INVENTORY_ADJUST: 'inventory:adjust',
+  INVENTORY_TRANSFER: 'inventory:transfer',
+  WAREHOUSES_READ: 'warehouses:read',
+  WAREHOUSES_WRITE: 'warehouses:write',
+  SUPPLIERS_READ: 'suppliers:read',
+  SUPPLIERS_WRITE: 'suppliers:write',
+  CUSTOMERS_READ: 'customers:read',
+  CUSTOMERS_WRITE: 'customers:write',
+  PURCHASE_ORDERS_READ: 'purchase-orders:read',
+  PURCHASE_ORDERS_WRITE: 'purchase-orders:write',
+  PURCHASE_ORDERS_APPROVE: 'purchase-orders:approve',
+  PURCHASE_ORDERS_RECEIVE: 'purchase-orders:receive',
+  SALES_ORDERS_READ: 'sales-orders:read',
+  SALES_ORDERS_WRITE: 'sales-orders:write',
+  SALES_ORDERS_FULFILL: 'sales-orders:fulfill',
+  REPORTS_READ: 'reports:read',
+  REPORTS_EXPORT: 'reports:export',
+  DASHBOARD_READ: 'dashboard:read',
+  NOTIFICATIONS_READ: 'notifications:read',
+  SETTINGS_WRITE: 'settings:write',
+} as const;
+
+export type PermissionKey = (typeof Permissions)[keyof typeof Permissions];
+
+export const ALL_PERMISSIONS: PermissionKey[] = Object.values(Permissions);
