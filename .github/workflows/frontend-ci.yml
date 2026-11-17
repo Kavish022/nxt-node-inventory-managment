@@ -1,0 +1,43 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - 'frontend-next/**'
+      - '.github/workflows/frontend-ci.yml'
+  pull_request:
+    paths:
+      - 'frontend-next/**'
+      - '.github/workflows/frontend-ci.yml'
+
+jobs:
+  frontend-test-and-build:
+    name: Frontend Lint, Test & Next.js Build
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend-next
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend-next/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Frontend Tests
+        run: npm test
+
+      - name: Build Next.js Application
+        env:
+          NEXT_PUBLIC_API_URL: "http://localhost:5001/api/v1"
+          NEXT_PUBLIC_WS_URL: "http://localhost:5001"
+        run: npm run build
