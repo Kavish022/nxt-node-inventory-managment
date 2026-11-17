@@ -22,6 +22,9 @@ RUN npm run build
 # Prune devDependencies to keep image lean
 RUN npm prune --production
 
+# Ensure Prisma Client engine for linux-musl-openssl-3.0.x is generated in production node_modules
+RUN npx prisma generate
+
 # ==========================================
 # STAGE 2: Production Runtime
 # ==========================================
