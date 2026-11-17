@@ -13,7 +13,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "lint": "tsc --noEmit",
-    "test": "tsc --noEmit"
+    "test": "vitest run"
   },
   "keywords": [
     "nodejs",
@@ -51,9 +51,12 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/morgan": "^1.9.9",
     "@types/node": "^22.9.0",
+    "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
     "prisma": "^5.22.0",
+    "supertest": "^7.3.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^5.1.0"
   }
 }
