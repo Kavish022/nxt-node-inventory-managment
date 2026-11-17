@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadUser() {
       try {
+        // Reads from HttpOnly cookie automatically via withCredentials: true
         const res = await apiClient.get('/auth/me');
         setUser(res.data.data);
       } catch {
@@ -41,28 +42,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [pathname, router]);
 
   const login = async (email: string, password: string) => {
+    // Backend issues HttpOnly, Secure, SameSite=None cookies directly
     const res = await apiClient.post('/auth/login', { email, password });
-    if (res.data?.data?.tokens?.accessToken && typeof window !== 'undefined') {
-      localStorage.setItem('flowstock_access_token', res.data.data.tokens.accessToken);
-    }
     setUser(res.data.data.user);
     router.push('/dashboard');
   };
 
   const register = async (name: string, email: string, password: string) => {
+    // Backend issues HttpOnly, Secure, SameSite=None cookies directly
     const res = await apiClient.post('/auth/register', { name, email, password });
-    if (res.data?.data?.tokens?.accessToken && typeof window !== 'undefined') {
-      localStorage.setItem('flowstock_access_token', res.data.data.tokens.accessToken);
-    }
     setUser(res.data.data.user);
     router.push('/dashboard');
   };
 
   const logout = async () => {
     try {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('flowstock_access_token');
-      }
+      // Backend revokes refresh token in database and expires the HttpOnly cookies
       await apiClient.post('/auth/logout');
     } finally {
       setUser(null);
