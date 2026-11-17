@@ -17,7 +17,7 @@ const router = Router();
 router.get('/csrf', asyncHandler(AuthController.csrf));
 router.post('/register', authRateLimiter, validate({ body: registerSchema }), asyncHandler(AuthController.register));
 router.post('/login', authRateLimiter, validate({ body: loginSchema }), asyncHandler(AuthController.login));
-router.post('/refresh', authRateLimiter, asyncHandler(AuthController.refresh));
+router.post('/refresh', asyncHandler(AuthController.refresh));
 router.post('/logout', asyncHandler(AuthController.logout));
 router.post('/forgot-password', authRateLimiter, validate({ body: forgotPasswordSchema }), asyncHandler(AuthController.forgotPassword));
 router.post('/reset-password', authRateLimiter, validate({ body: resetPasswordSchema }), asyncHandler(AuthController.resetPassword));
