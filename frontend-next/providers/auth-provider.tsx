@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
 }
@@ -41,12 +42,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     const res = await apiClient.post('/auth/login', { email, password });
+    if (res.data?.data?.tokens?.accessToken && typeof window !== 'undefined') {
+      localStorage.setItem('flowstock_access_token', res.data.data.tokens.accessToken);
+    }
+    setUser(res.data.data.user);
+    router.push('/dashboard');
+  };
+
+  const register = async (name: string, email: string, password: string) => {
+    const res = await apiClient.post('/auth/register', { name, email, password });
+    if (res.data?.data?.tokens?.accessToken && typeof window !== 'undefined') {
+      localStorage.setItem('flowstock_access_token', res.data.data.tokens.accessToken);
+    }
     setUser(res.data.data.user);
     router.push('/dashboard');
   };
 
   const logout = async () => {
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('flowstock_access_token');
+      }
       await apiClient.post('/auth/logout');
     } finally {
       setUser(null);
@@ -61,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, hasPermission }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, hasPermission }}>
       {children}
     </AuthContext.Provider>
   );

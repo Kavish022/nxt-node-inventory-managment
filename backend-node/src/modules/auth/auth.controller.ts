@@ -18,7 +18,7 @@ function issueSession(
   ApiResponse.send(res, {
     statusCode,
     message,
-    data: { user: result.user },
+    data: { user: result.user, tokens: result.tokens },
   });
 }
 

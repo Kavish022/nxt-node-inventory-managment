@@ -39,16 +39,18 @@ export class AuthService {
       throw new ConflictError('A user with this email already exists');
     }
 
-    const viewerRole = await AuthRepository.findRoleByName(RoleName.VIEWER);
-    if (!viewerRole) {
-      throw new Error('Viewer role is missing. Run database seeds.');
+    const defaultRole =
+      (await AuthRepository.findRoleByName(RoleName.ADMIN)) ||
+      (await AuthRepository.findRoleByName(RoleName.VIEWER));
+    if (!defaultRole) {
+      throw new Error('Default role is missing. Run database seeds.');
     }
 
     const user = await AuthRepository.createUser({
       email: input.email,
       name: input.name,
       passwordHash: await hashPassword(input.password),
-      role: { connect: { id: viewerRole.id } },
+      role: { connect: { id: defaultRole.id } },
     });
 
     const tokens = tokenPair(user.id, user.email);
