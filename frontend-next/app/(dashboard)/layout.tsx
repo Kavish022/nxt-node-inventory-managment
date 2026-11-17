@@ -24,11 +24,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
       <Sidebar />
       <div className="pl-64 flex flex-col min-h-screen">
         <Header />
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 p-8 text-slate-900 dark:text-slate-100">{children}</main>
       </div>
     </div>
   );
