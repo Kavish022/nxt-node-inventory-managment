@@ -35,6 +35,7 @@ const navItems: NavItem[] = [
   { name: 'Customers', href: '/customers', icon: Users },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart },
   { name: 'Sales Orders', href: '/sales-orders', icon: Receipt },
+  { name: 'Payments', href: '/payments', icon: Receipt },
   { name: 'Reports & Exports', href: '/reports', icon: FileBarChart },
 ];
 

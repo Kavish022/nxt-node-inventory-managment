@@ -154,3 +154,105 @@ Follow these 4 steps to keep the architecture clean and consistent:
    - `<feature>.routes.ts` (Router setup)
 3. **Register Route**:
    - Mount your router in `src/app.ts`: `app.use('/api/v1/<feature>', <feature>Routes);`
+
+## Stripe Connect payments
+
+The Payments dashboard at `/payments` supports receiver onboarding, payment requests, hosted Checkout,
+participant-only history, and success/failure slips. This implementation routes payments to individual
+Stripe Express connected accounts using destination charges and `on_behalf_of`.
+
+### Configuration and local setup
+
+Enable Connect in your Stripe sandbox/test account. In `backend-node/.env`, configure:
+
+```dotenv
+APP_BASE_URL=http://localhost:3000
+STRIPE_SECRET_KEY=sk_test_REPLACE_WITH_YOUR_KEY
+STRIPE_WEBHOOK_SECRET=whsec_REPLACE_WITH_YOUR_ENDPOINT_SECRET
+STRIPE_ALLOW_LIVE=false
+```
+
+Keep these credentials on the backend. Hosted Checkout does not require a publishable key in the frontend.
+Restart the backend after changing environment variables. Missing credentials disable the payment UI without
+preventing other application modules from starting. Live keys/events are blocked unless explicitly enabled.
+
+From `backend-node`, validate and generate the client using the schema folder:
+
+```powershell
+npx.cmd prisma validate --schema=./prisma/schema
+npm.cmd run db:generate -- --schema=./prisma/schema
+```
+
+The configured test database has been updated. For another existing database, review its schema diff before
+applying changes; establish a migration baseline before adopting Prisma Migrate. Do not reset a populated database.
+
+Install and authenticate the Stripe CLI, then forward **platform-account** events to the local webhook:
+
+```powershell
+stripe listen --events payment_intent.succeeded,payment_intent.payment_failed,payment_intent.canceled,checkout.session.expired,checkout.session.completed --forward-to http://localhost:5001/api/v1/webhooks/stripe
+```
+
+Copy the listener's signing secret into `STRIPE_WEBHOOK_SECRET` and restart the backend. For hosted environments,
+register the equivalent HTTPS endpoint in Stripe and use that endpoint's secret. Configure its snapshot event API
+version to match the installed Stripe SDK (currently `2026-11-18.endive`). Destination-charge PaymentIntent events
+belong to the platform account; the server verifies their destination against the saved receiver account.
+
+### User flow
+
+1. A receiver signs in, opens Payments, and completes Stripe Connect onboarding. Stripe determines country,
+   currency, verification, and payout availability. The account must have charges and payouts enabled and its
+   transfers capability active before it can receive payment requests.
+2. The receiver selects a payer and creates a request with an amount, currency, and description. The authenticated
+   receiver and their saved connected account are used; the browser cannot choose an arbitrary destination account.
+3. The payer signs in, opens the request, and chooses **Pay securely with Stripe**. Checkout reads the amount and
+   currency from the database. The supported currencies are USD, INR, EUR, and GBP, with two decimal places.
+4. Stripe reports the result through a signed webhook. Returning to the application does not confirm or cancel a payment.
+   Checkout cancellation leaves the request available while its session is open; an expired session closes the request.
+5. Every confirmed failed charge attempt keeps a separate failed slip. A later success keeps the failure history and
+   becomes the payment's current receipt. Duplicate webhook events or success notifications do not create extra receipts.
+
+### Endpoints
+
+Payment endpoints require authentication. Lists and details are restricted to the sender/receiver.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/v1/payments` | Paginated payment history |
+| GET | `/api/v1/payments/people?search=...` | Find an active payer |
+| GET | `/api/v1/payments/connect` | Current user's Connect readiness |
+| POST | `/api/v1/payments/connect/onboarding` | Create/resume onboarding (`country` required for a new account) |
+| POST | `/api/v1/payments` | Request payment (`senderId`, decimal-string `amount`, `currency`, `description`) |
+| POST | `/api/v1/payments/checkout` | Open/reuse Checkout (`paymentId` only) |
+| GET | `/api/v1/payments/:id` | Payment, attempts, and receipt status |
+| GET | `/api/v1/payments/:id/receipts/:receiptId` | Private receipt download |
+| POST | `/api/v1/payments/:id/receipts/:receiptId/retry` | Retry exhausted receipt generation |
+| POST | `/api/v1/webhooks/stripe` | Stripe-signed webhook; raw body, no browser authentication |
+
+For authenticated POSTs, first obtain `/api/v1/auth/csrf`, then send its returned token as `X-CSRF-Token` with the
+cookies. The frontend's `paymentPost()` helper does this and retries once if a session refresh rotated the token.
+Payment routes have per-user read/mutation rate limits; Stripe webhooks are mounted before JSON parsing and browser limits.
+
+### Receipt durability
+
+The webhook commits the payment result, deduplication event, immutable receipt snapshot, attempt, and receipt job in
+one database transaction before acknowledging Stripe. A database-backed worker runs every five seconds, leases jobs,
+recovers expired leases, and retries generation up to five times. It does not depend on Redis.
+
+Receipts are self-contained printable HTML documents stored privately in `PaymentGeneration.documentHtml` and served
+through the authenticated download endpoint. `fileKey` identifies the stored document. User content is HTML-escaped.
+The worker never changes a payment's financial outcome. Open a downloaded document and use Print to save as PDF.
+Failed slips explicitly state that they are not proof of a completed payment. Refunds and disputes are separate future flows.
+
+### Verification
+
+```powershell
+npm.cmd test
+# Optional real-database invariant test: inserts are deliberately rolled back.
+$env:RUN_PAYMENT_DB_TESTS = 'true'
+npm.cmd test -- src/tests/payment-database.test.ts
+Remove-Item Env:RUN_PAYMENT_DB_TESTS
+```
+
+The automated tests cover signed raw webhooks, amount/destination matching, idempotency, access rules, failed-to-successful
+history, receipt escaping, worker claims, and retry scheduling. To test actual hosted payment collection, complete two-user
+onboarding/Checkout in your Stripe sandbox using Stripe test payment methods; no real card data belongs in this application.

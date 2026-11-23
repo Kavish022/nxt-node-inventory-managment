@@ -3,6 +3,7 @@ import { createApp } from './app';
 import { env } from './config/env';
 import { connectDatabase, disconnectDatabase } from './config/db';
 import { initSocketServer } from './socket';
+import { startPaymentReceiptWorker } from './jobs/payment-receipt.worker';
 
 async function bootstrap() {
   await connectDatabase();
@@ -12,6 +13,7 @@ async function bootstrap() {
 
   // Initialize WebSockets
   initSocketServer(httpServer);
+  const stopReceiptWorker = startPaymentReceiptWorker();
 
   const server = httpServer.listen(env.PORT, () => {
     console.log(`
@@ -31,6 +33,7 @@ WS Endpoint: ws://localhost:${env.PORT}/socket.io
 
       server.close(async () => {
         try {
+          await stopReceiptWorker();
           await disconnectDatabase();
           process.exit(0);
         } catch (err) {

@@ -1,0 +1,23 @@
+enum PaymentReceiptJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETE
+  FAILED
+}
+
+model PaymentReceiptJob {
+  id            Int                     @id @default(autoincrement())
+  receiptId     Int                     @unique
+  status        PaymentReceiptJobStatus @default(PENDING)
+  attempts      Int                     @default(0)
+  nextAttemptAt DateTime                @default(now())
+  lockedAt      DateTime?
+  lastError     String?                 @db.VarChar(500)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+
+  receipt PaymentGeneration @relation(fields: [receiptId], references: [id], onDelete: Restrict)
+
+  @@index([status, nextAttemptAt])
+  @@map("payment_receipt_jobs")
+}

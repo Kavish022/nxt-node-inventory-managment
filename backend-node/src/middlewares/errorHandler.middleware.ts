@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { ApiError } from '../utils/apiError';
 import { HttpStatus } from '../constants/httpStatusCodes';
 import { env } from '../config/env';
+import Stripe from 'stripe';
 
 export function errorHandler(
   err: Error,
@@ -23,6 +24,16 @@ export function errorHandler(
   }
 
   // 2. Zod Validation Errors
+  if (err instanceof Stripe.errors.StripeError) {
+    const invalidRequest = err instanceof Stripe.errors.StripeInvalidRequestError;
+    return res.status(invalidRequest ? HttpStatus.BAD_REQUEST : HttpStatus.SERVICE_UNAVAILABLE).json({
+      success: false,
+      statusCode: invalidRequest ? HttpStatus.BAD_REQUEST : HttpStatus.SERVICE_UNAVAILABLE,
+      message: invalidRequest ? err.message : 'Stripe could not complete this request. Please try again later.',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   if (err instanceof ZodError) {
     const formattedErrors = err.errors.map((e) => ({
       path: e.path.join('.'),

@@ -162,17 +162,17 @@ export class InventoryService {
         );
       }
 
-      return InventoryService.applyMovement(
-        {
-          type: input.type,
-          productId: input.productId,
-          warehouseId: input.warehouseId,
-          quantityDelta: signedQuantity,
-          notes: input.notes,
-          createdById: input.createdById,
-        },
-        tx
-      );
+      // return InventoryService.applyMovement(
+      //   {
+      //     type: input.type,
+      //     productId: input.productId,
+      //     warehouseId: input.warehouseId,
+      //     quantityDelta: signedQuantity,
+      //     notes: input.notes,
+      //     createdById: input.createdById,
+      //   },
+      //   tx
+      // );
     });
 
     await InventoryService.raiseStockAlerts(input.productId);
