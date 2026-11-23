@@ -1,0 +1,25 @@
+enum PaymentReceiptStatus {
+  SUCCESS
+  FAILED
+}
+
+model PaymentGeneration {
+  id            Int                  @id @default(autoincrement())
+  receiptNumber String               @unique @default(uuid()) @db.VarChar(36)
+  status        PaymentReceiptStatus
+  failureCode   String?              @db.VarChar(100)
+  failureReason String?              @db.VarChar(500)
+
+  // Permanent storage key for the generated slip, rather than an expiring URL.
+  fileKey       String?              @db.VarChar(500)
+  generatedAt   DateTime             @default(now())
+  snapshot      Json?
+  documentHtml  String?              @db.MediumText
+
+  payment       Payment?             @relation("PaymentReceipt")
+  attempt       PaymentAttempt?      @relation("PaymentAttemptReceipt")
+  job           PaymentReceiptJob?
+
+  @@index([status, generatedAt])
+  @@map("payment_generations")
+}

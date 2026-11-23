@@ -21,6 +21,8 @@ import { salesOrderRoutes } from './modules/sales-order/sales-order.routes';
 import { notificationRoutes } from './modules/notification/notification.routes';
 import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 import { reportsRoutes } from './modules/reports/reports.routes';
+import { paymentRoutes } from './modules/payment/payment.routes';
+import { stripeWebhookRoutes } from './modules/payment/stripe-webhook.routes';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './docs/openapi';
 
@@ -34,6 +36,9 @@ export function createApp(): Application {
   app.use(securityMiddleware);
   app.use(corsMiddleware);
   app.use(loggerMiddleware);
+
+  // Stripe signatures require the original bytes. Keep this before express.json and browser auth/rate limits.
+  app.use(['/api/webhooks', '/api/v1/webhooks'], stripeWebhookRoutes);
 
   // 2. Cookie & Body Parsing
   app.use(cookieParser());
@@ -63,6 +68,7 @@ export function createApp(): Application {
     app.use(`${prefix}/notifications`, notificationRoutes);
     app.use(`${prefix}/dashboard`, dashboardRoutes);
     app.use(`${prefix}/reports`, reportsRoutes);
+    app.use(`${prefix}/payments`, paymentRoutes);
   });
 
   // 5. Fallback 404 & Centralized Error Handler

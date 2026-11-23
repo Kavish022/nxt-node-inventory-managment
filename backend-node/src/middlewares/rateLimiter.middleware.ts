@@ -12,6 +12,8 @@ function limitMessage(message: string) {
 }
 
 export const apiRateLimiter = rateLimit({
+  // Payments have authenticated per-user limits to support status polling behind shared IPs.
+  skip: (req) => /^\/api\/(?:v1\/)?payments(?:\/|$)/.test(req.originalUrl.split('?')[0]),
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max: env.RATE_LIMIT_MAX_REQUESTS,
   standardHeaders: true,

@@ -1,0 +1,12 @@
+model StripeEvent {
+  id             String   @id @db.VarChar(255)
+  type           String   @db.VarChar(100)
+  paymentId      Int
+  eventCreatedAt DateTime
+  processedAt    DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@map("stripe_events")
+}

@@ -40,6 +40,7 @@ model User {
   name            String            @db.VarChar(120)
   passwordHash    String            @db.VarChar(255)
   avatarUrl       String?           @db.VarChar(500)
+  createLearnings Learning[] @relation("LearningCreator")
   roleId          Int
   accountStatus   UserAccountStatus @default(ACTIVE)
   emailVerifiedAt DateTime?

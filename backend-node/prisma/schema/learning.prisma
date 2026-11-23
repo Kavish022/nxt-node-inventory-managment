@@ -1,0 +1,43 @@
+enum LearningStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum LearningVideoStatus {
+  PENDING_UPLOAD
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+model Learning {
+  id              Int                 @id @default(autoincrement())
+  title           String              @db.VarChar(200)
+  slug            String              @unique @db.VarChar(220)
+  description     String?             @db.Text
+  topic           String?             @db.VarChar(100)
+  thumbnailUrl    String?             @db.VarChar(1000)
+  durationSeconds Int?
+
+  // Identifier returned by the video provider after upload creation.
+  videoId         String?             @unique @db.VarChar(255)
+  videoStatus     LearningVideoStatus @default(PENDING_UPLOAD)
+
+  status          LearningStatus      @default(DRAFT)
+  isFeatured      Boolean             @default(false)
+  sortOrder       Int                 @default(0)
+
+  createdById     Int?
+  createdBy       User?               @relation("LearningCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  publishedAt     DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([createdById])
+  @@index([status, videoStatus, sortOrder])
+  @@index([topic])
+  @@map("learnings")
+}

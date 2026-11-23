@@ -21,6 +21,9 @@ const envSchema = z.object({
     .default('true')
     .transform((value) => value === 'true'),
   APP_BASE_URL: z.string().default('http://localhost:3000'),
+  STRIPE_SECRET_KEY: z.string().optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_ALLOW_LIVE: z.enum(['true', 'false']).default('false').transform((value) => value === 'true'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -1,0 +1,16 @@
+model PaymentAttempt {
+  id                    Int                  @id @default(autoincrement())
+  paymentId             Int
+  outcomeKey            String               @unique @db.VarChar(255)
+  stripePaymentIntentId String               @db.VarChar(255)
+  stripeChargeId        String?              @db.VarChar(255)
+  status                PaymentReceiptStatus
+  receiptId             Int                  @unique
+  createdAt             DateTime             @default(now())
+
+  payment Payment           @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  receipt PaymentGeneration @relation("PaymentAttemptReceipt", fields: [receiptId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId, createdAt])
+  @@map("payment_attempts")
+}
